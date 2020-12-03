@@ -1,0 +1,21 @@
+The API listens on port 8080, and you can make requests to it like this:
+
+
+curl  -X POST --data  '{"ClientID": "2"}' localhost:8080/sensor-onboarding-sample
+
+Load testing, but you may want to check the open files setting and the open sockets limit, as the connections are left within TIME-WAIT state:
+lsof -u iot | wc -l
+lsof -p 1 | wc -l
+ss -ta dport = :9090 | wc -l
+
+Vegeta:
+
+echo '{"method":"POST","url":"http://localhost:8080/sensor-onboarding-sample","body":"eyJDbGllbnRJRCI6InNkIn0="}' \
+| vegeta attack -format=json -duration 10s > results.bin
+cat results.bin | vegeta report results.bin
+cat results.bin | vegeta report -type hist[10ms,20ms,100ms]
+cat results.bin | vegeta plot > plot.html
+
+If you want to post dynamic content, you need to call vegeta with lazy option so it can read from a stream:
+jq -ncM 'while(true; .+1) | tostring | {method: "POST", url: "http://localhost:8080/sensor-onboarding-sample", body: {"ClientID": .} | @base64}'  | \
+vegeta attack -lazy --format=json -duration=10s -rate 200 -max-workers 4 | tee results.bin | vegeta report
