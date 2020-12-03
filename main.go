@@ -17,6 +17,7 @@ import (
 
 const (
 	maxAPIReqCount          = 10
+	withGlobalPool          = true // whether the api requests to lorawan are made though a global pool or a local one
 	deviceCount             = 100
 	lorawanScheme           = "http://"
 	lorawanAddress          = "127.0.0.1:9090"
@@ -46,7 +47,8 @@ func main() {
 	}
 	shutdown := handleInterrupts()
 	ctx, cancel := context.WithCancel(context.Background())
-	registrator, err := registrator.NewDeviceRegistrator(registrator.Config{MaxAPIReqCount: maxAPIReqCount}, lorawanClient)
+	registrator, err := registrator.NewDeviceRegistrator(
+		registrator.Config{MaxAPIReqCount: maxAPIReqCount, WithGlobalPool: withGlobalPool}, lorawanClient)
 	if err != nil {
 		log.Fatalf("Cannot create device registrator: %v", err)
 	}
